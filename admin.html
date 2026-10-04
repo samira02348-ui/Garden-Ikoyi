@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Garden Ikoyi | Admin</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- PIN login (demo only: the PIN is visible in this file, so don't use for real security) -->
+<div id="login" class="login">
+  <h1 style="color:var(--gold-soft)">Garden Admin</h1>
+  <p style="color:var(--muted);font-size:14px;margin-top:6px">Enter your 4-digit PIN</p>
+  <input id="pin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" aria-label="PIN">
+  <div id="pinErr" class="err"></div>
+  <button id="pinBtn" class="btn solid" style="width:100%;justify-content:center">Unlock</button>
+</div>
+
+<div id="app" class="wrap" hidden>
+  <div class="admin-top">
+    <h1>Menu Manager</h1>
+    <div class="row">
+      <a class="btn" href="index.html" target="_blank">Preview customer menu</a>
+      <button id="logout" class="btn">Log out</button>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><b id="sDishes">0</b><small>Total dishes</small></div>
+    <div class="stat"><b id="sCats">0</b><small>Categories</small></div>
+    <div class="stat"><b id="sOff">0</b><small>Unavailable</small></div>
+  </div>
+
+  <div class="row" style="margin-bottom:16px">
+    <button id="add" class="btn solid">Add new dish</button>
+    <button id="save" class="btn solid">Save changes</button>
+    <button id="reset" class="btn danger">Reset to menu.json</button>
+  </div>
+
+  <div id="list"></div>
+
+  <h2 style="color:var(--gold-soft);margin:28px 0 6px">Updated JSON</h2>
+  <p style="color:var(--muted);font-size:14px;margin-bottom:10px">To make changes permanent for every customer, copy this and replace the contents of menu.json, then redeploy.</p>
+  <textarea id="json" class="jsonbox" readonly></textarea>
+  <div class="row" style="margin:10px 0 60px"><button id="copy" class="btn">Copy JSON</button></div>
+</div>
+<div id="toast" class="toast"></div>
+
+<datalist id="catlist"></datalist>
+<script src="menu.js"></script>
+<script>
+const PIN = "1234", $ = id => document.getElementById(id);
+let MENU = null;
+
+/* ---------- Login ---------- */
+function unlock() {
+  if ($("pin").value === PIN) { sessionStorage.setItem("garden_admin","1"); start(); }
+  else { $("pinErr").textContent = "Wrong PIN. Please try again."; $("pin").value = ""; }
+}
+$("pinBtn").onclick = unlock;
+$("pin").addEventListener("keydown", e => e.key==="Enter" && unlock());
+$("logout").onclick = () => { sessionStorage.removeItem("garden_admin"); location.reload(); };
+
+async function start() {
+  $("login").hidden = true; $("app").hidden = false;
+  MENU = await loadMenu();
+  renderList();
+}
+if (sessionStorage.getItem("garden_admin")) start();
+
+/* ---------- Helpers ---------- */
+function toast(t) { const el=$("toast"); el.textContent=t; el.classList.add("show"); setTimeout(()=>el.classList.remove("show"),1800); }
+function cats() { return [...new Set([...MENU.categories, ...MENU.items.map(i=>i.category)].filter(Boolean))]; }
+
+function refresh() {
+  MENU.categories = cats();
+  $("sDishes").textContent = MENU.items.length;
+  $("sCats").textContent = MENU.categories.length;
+  $("sOff").textContent = MENU.items.filter(i=>!i.available).length;
+  $("catlist").innerHTML = MENU.categories.map(c=>`<option value="${esc(c)}">`).join("");
+  $("json").value = JSON.stringify(MENU, null, 2);
+}
+
+/* ---------- Dish editor list ---------- */
+function renderList() {
+  $("list").innerHTML = MENU.items.map(i => `
+    <div class="card" data-id="${i.id}">
+      <div class="grid">
+        <div><label>Name</label><input type="text" data-f="name" value="${esc(i.name)}"></div>
+        <div><label>Price (₦)</label><input type="number" min="0" step="100" data-f="price" value="${i.price}"></div>
+        <div class="full"><label>Description</label><textarea data-f="description">${esc(i.description)}</textarea></div>
+        <div><label>Category</label><input type="text" list="catlist" data-f="category" value="${esc(i.category)}"></div>
+        <div><label>Emoji</label><input type="text" maxlength="4" data-f="emoji" value="${esc(i.emoji||"")}"></div>
+      </div>
+      <div class="card-foot">
+        <div class="checks">
+          <label><input type="checkbox" data-f="popular" ${i.popular?"checked":""}> Popular</label>
+          <label><input type="checkbox" data-f="available" ${i.available?"checked":""}> Available</label>
+        </div>
+        <button class="btn danger" data-del="${i.id}">Delete</button>
+      </div>
+    </div>`).join("") || `<p class="empty">No dishes yet. Tap "Add new dish" to start.</p>`;
+  refresh();
+}
+
+// Update the data live as fields change
+$("list").addEventListener("input", e => {
+  const f = e.target.dataset.f; if (!f) return;
+  const item = MENU.items.find(i => i.id === e.target.closest(".card").dataset.id);
+  item[f] = e.target.type==="checkbox" ? e.target.checked : e.target.type==="number" ? Number(e.target.value) : e.target.value;
+  refresh();
+});
+$("list").addEventListener("click", e => {
+  const id = e.target.dataset.del; if (!id) return;
+  const item = MENU.items.find(i=>i.id===id);
+  if (confirm(`Delete "${item.name}"?`)) { MENU.items = MENU.items.filter(i=>i.id!==id); renderList(); toast("Dish deleted. Save to keep it."); }
+});
+
+/* ---------- Actions ---------- */
+$("add").onclick = () => {
+  MENU.items.unshift({id:"d"+Date.now(), name:"New dish", price:0, description:"", category:MENU.categories[0]||"Top Picks", popular:false, available:true, emoji:"🍽️"});
+  renderList(); window.scrollTo({top:$("list").offsetTop-20, behavior:"smooth"});
+};
+$("save").onclick = () => { refresh(); saveMenu(MENU); toast("Saved. Customer menu updated."); };
+$("reset").onclick = async () => {
+  if (!confirm("Discard all edits and go back to menu.json?")) return;
+  resetMenu(); MENU = await loadMenu(); renderList(); toast("Menu reset.");
+};
+$("copy").onclick = () => { $("json").select(); navigator.clipboard?.writeText($("json").value); toast("JSON copied."); };
+</script>
+</body>
+</html>

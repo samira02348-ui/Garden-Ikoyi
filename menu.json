@@ -1,0 +1,16 @@
+{
+  "categories": ["Top Picks", "Naija Specials", "Grills", "Bar"],
+  "items": [
+    {"id":"d1","name":"Smoked Awo Pasta","price":18500,"description":"Smoked guinea fowl, penne, basil, parmesan","category":"Top Picks","popular":true,"available":true,"emoji":"🍝"},
+    {"id":"d2","name":"Seafood Linguine","price":22500,"description":"Seafood medley, linguine, spicy cream, tiger prawn","category":"Top Picks","popular":true,"available":true,"emoji":"🦐"},
+    {"id":"d3","name":"Made In Naija","price":14500,"description":"A proud plate of Nigerian classics, made fresh in our kitchen","category":"Naija Specials","popular":true,"available":true,"emoji":"🍛"},
+    {"id":"d4","name":"Village Fried Rice","price":6500,"description":"Smoky, peppery fried rice with a village-kitchen twist","category":"Naija Specials","popular":false,"available":true,"emoji":"🍚"},
+    {"id":"d5","name":"Seafood Owanbe Sauce","price":22500,"description":"Rich party-style sauce loaded with fresh seafood","category":"Naija Specials","popular":false,"available":true,"emoji":"🦞"},
+    {"id":"d6","name":"Salmon Fillet","price":40500,"description":"Pan-seared salmon fillet, garden herbs, lemon butter","category":"Grills","popular":false,"available":true,"emoji":"🐟"},
+    {"id":"d7","name":"Lamb Shank","price":46000,"description":"Slow-braised lamb shank, rich gravy, seasonal sides","category":"Grills","popular":true,"available":true,"emoji":"🍖"},
+    {"id":"d8","name":"Half Grilled Chicken & Jollof","price":15500,"description":"Charcoal-grilled half chicken with smoky party jollof","category":"Grills","popular":false,"available":true,"emoji":"🍗"},
+    {"id":"d9","name":"Chapman","price":5000,"description":"Lagos's favourite: citrus, grenadine, bitters, cucumber","category":"Bar","popular":false,"available":true,"emoji":"🍹"},
+    {"id":"d10","name":"Signature Cocktails","price":8500,"description":"Ask your server for today's garden-inspired creations","category":"Bar","popular":false,"available":true,"emoji":"🍸"},
+    {"id":"d11","name":"Palm Wine","price":4000,"description":"Naturally sweet, lightly sparkling, served chilled","category":"Bar","popular":false,"available":true,"emoji":"🥂"}
+  ]
+}

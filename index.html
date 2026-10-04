@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Garden Ikoyi | Menu</title>
+<meta name="theme-color" content="#08190f">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="hero">
+  <span class="leaf">🌿</span>
+  <h1>Garden<span>IKOYI</span></h1>
+  <p>Garden Restaurant in Ikoyi</p>
+  <div class="rule"></div>
+</header>
+
+<div class="controls"><div class="wrap">
+  <input id="search" class="search" type="search" placeholder="Search dishes or drinks" aria-label="Search the menu">
+  <nav id="tabs" class="tabs" aria-label="Menu categories"></nav>
+</div></div>
+
+<main class="wrap" id="menu"></main>
+
+<footer>
+  <h3>The Garden Ikoyi</h3>
+  <p>Ikoyi, Lagos, Nigeria<br>(Demo address: replace with your full street address)</p>
+  <p style="margin-top:10px"><a href="https://instagram.com/gardenikoyi" target="_blank" rel="noopener">Instagram @gardenikoyi</a></p>
+  <span class="demo">Demo menu. Prices and dishes are placeholders.</span>
+</footer>
+
+<script src="menu.js"></script>
+<script>
+let MENU = {categories:[], items:[]}, activeCat = "All", query = "";
+const $ = id => document.getElementById(id);
+
+function render() {
+  // Category tabs
+  const cats = ["All", ...MENU.categories];
+  $("tabs").innerHTML = cats.map(c =>
+    `<button class="tab ${c===activeCat?"active":""}" data-cat="${esc(c)}">${esc(c)}</button>`).join("");
+
+  // Filter by category and search text
+  const q = query.trim().toLowerCase();
+  const items = MENU.items.filter(i =>
+    (activeCat==="All" || i.category===activeCat) &&
+    (!q || (i.name+" "+i.description).toLowerCase().includes(q)));
+
+  if (!items.length) { $("menu").innerHTML = `<p class="empty">No dishes match your search. Try another word or category.</p>`; return; }
+
+  // Group by category, keeping category order
+  let html = "", n = 0;
+  MENU.categories.forEach(cat => {
+    const group = items.filter(i => i.category===cat);
+    if (!group.length) return;
+    html += `<section class="section"><h2>${esc(cat)}</h2>` + group.map(i => {
+      const msg = encodeURIComponent(`Hello Garden Ikoyi, I'd like to order ${i.name}`);
+      return `<article class="dish ${i.available?"":"unavailable"}" style="animation-delay:${Math.min(n++,8)*50}ms">
+        <div class="thumb" aria-hidden="true">${esc(i.emoji||"🍽️")}</div>
+        <div class="dish-body">
+          <div class="line"><h3>${esc(i.name)}${i.popular?'<span class="badge">Popular</span>':""}</h3><span class="dots"></span><span class="price">${naira(i.price)}</span></div>
+          <p class="desc">${esc(i.description)}</p>
+          ${i.available
+            ? `<a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/${WHATSAPP}?text=${msg}">Order on WhatsApp</a>`
+            : `<span class="soldout">Not available today</span>`}
+        </div></article>`;
+    }).join("") + `</section>`;
+  });
+  $("menu").innerHTML = html;
+}
+
+$("tabs").addEventListener("click", e => {
+  const b = e.target.closest(".tab"); if (!b) return;
+  activeCat = b.dataset.cat; render();
+});
+$("search").addEventListener("input", e => { query = e.target.value; render(); });
+
+loadMenu().then(m => {
+  // Include any category used by items but missing from the list
+  m.items.forEach(i => { if (!m.categories.includes(i.category)) m.categories.push(i.category); });
+  MENU = m; render();
+}).catch(() => { $("menu").innerHTML = `<p class="empty">Menu could not load. Please ask your server.</p>`; });
+</script>
+</body>
+</html>
